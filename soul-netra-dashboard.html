@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOUL NETRA — Smart Real-Time Monitoring &amp; Inspection</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#0A1F3D;
+  --navy-deep:#071628;
+  --royal:#1B4F9C;
+  --royal-light:#2E68C4;
+  --sky:#5B9BE0;
+  --green:#178A5A;
+  --green-light:#1FA872;
+  --grey-bg:#F2F4F7;
+  --grey-panel:#FFFFFF;
+  --grey-line:#E1E6ED;
+  --ink:#0F1F33;
+  --ink-soft:#5B6B80;
+  --amber:#D98B1E;
+  --red:#C4392B;
+  --white:#FFFFFF;
+  --font-head:'IBM Plex Sans',-apple-system,Segoe UI,sans-serif;
+  --font-body:'Inter',-apple-system,Segoe UI,sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+  --radius-s:6px;
+  --radius-m:10px;
+  --shadow:0 1px 3px rgba(10,31,61,0.08), 0 1px 2px rgba(10,31,61,0.06);
+}
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--font-body);
+  background:var(--grey-bg);
+  color:var(--ink);
+  font-size:14px;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#C7D0DC;border-radius:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* ===== APP SHELL ===== */
+#app{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+#sidebar{
+  width:236px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--navy) 0%, var(--navy-deep) 100%);
+  color:#CBD8EA;
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+  z-index:40;
+}
+.brand{
+  padding:20px 18px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;gap:10px;
+}
+.brand-mark{
+  width:38px;height:38px;border-radius:9px;
+  background:radial-gradient(circle at 30% 30%, var(--sky), var(--royal) 65%);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  position:relative;
+}
+.brand-mark svg{width:20px;height:20px;}
+.brand-text{line-height:1.15;}
+.brand-text .name{font-family:var(--font-head);font-weight:700;color:#fff;font-size:16.5px;letter-spacing:0.3px;}
+.brand-text .tag{font-size:9.5px;color:#7C93B5;letter-spacing:1.1px;margin-top:2px;font-weight:500;}
+
+.nav-scroll{flex:1;overflow-y:auto;padding:10px 10px 14px;}
+.nav-section-label{font-size:10px;color:#5E7599;padding:14px 10px 6px;letter-spacing:0.5px;font-weight:600;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:8px;
+  color:#AFC0D8;font-size:13.2px;font-weight:500;
+  cursor:pointer;margin-bottom:1px;
+  transition:background .12s ease, color .12s ease;
+  position:relative;
+}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:0.85;}
+.nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
+.nav-item.active{background:rgba(46,104,196,0.28);color:#fff;}
+.nav-item.active::before{
+  content:'';position:absolute;left:-10px;top:6px;bottom:6px;width:3px;
+  background:var(--sky);border-radius:0 3px 3px 0;
+}
+.nav-badge{
+  margin-left:auto;background:var(--red);color:#fff;font-size:10px;
+  padding:1px 6px;border-radius:20px;font-weight:600;
+}
+.sidebar-foot{
+  padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,0.08);
+  font-size:10.5px;color:#5E7599;line-height:1.5;
+}
+.sidebar-foot b{color:#8FA6C9;}
+
+/* MAIN */
+#main{flex:1;min-width:0;display:flex;flex-direction:column;}
+#topbar{
+  height:60px;background:var(--white);border-bottom:1px solid var(--grey-line);
+  display:flex;align-items:center;padding:0 22px;gap:16px;
+  position:sticky;top:0;z-index:30;
+}
+.crumb{font-size:12px;color:var(--ink-soft);}
+.crumb b{color:var(--ink);font-weight:600;}
+.topbar-search{
+  flex:1;max-width:340px;margin-left:8px;
+  display:flex;align-items:center;gap:8px;
+  background:var(--grey-bg);border:1px solid var(--grey-line);
+  border-radius:8px;padding:7px 12px;color:var(--ink-soft);
+}
+.topbar-search svg{width:14px;height:14px;flex-shrink:0;}
+.topbar-search input{border:none;background:none;outline:none;font-size:12.5px;width:100%;color:var(--ink);font-family:var(--font-body);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px;}
+.topbar-pill{
+  display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--green);
+  background:#E7F5EE;padding:5px 10px;border-radius:20px;font-weight:600;
+}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(23,138,90,.5);}70%{box-shadow:0 0 0 6px rgba(23,138,90,0);}100%{box-shadow:0 0 0 0 rgba(23,138,90,0);}}
+.icon-btn{
+  width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  color:var(--ink-soft);cursor:pointer;position:relative;border:1px solid var(--grey-line);background:var(--white);
+}
+.icon-btn:hover{background:var(--grey-bg);}
+.icon-btn svg{width:16px;height:16px;}
+.icon-btn .dot{position:absolute;top:6px;right:7px;width:7px;height:7px;background:var(--red);border-radius:50%;border:1.5px solid #fff;}
+.avatar{
+  width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--royal),var(--navy));
+  color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:var(--font-head);
+}
+
+#content{padding:22px 26px 60px;max-width:1440px;width:100%;margin:0 auto;}
+.view{display:none;}
+.view.active{display:block;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.page-head{margin-bottom:18px;}
+.page-title{font-family:var(--font-head);font-size:21px;font-weight:700;color:var(--navy);letter-spacing:-0.2px;}
+.page-sub{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
+
+/* ===== KPI CARDS ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi-card{
+  background:var(--white);border:1px solid var(--grey-line);border-radius:var(--radius-m);
+  padding:16px;cursor:pointer;transition:box-shadow .15s ease, transform .15s ease;
+  position:relative;overflow:hidden;
+}
+.kpi-card:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.kpi-icon{
+  width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+}
+.kpi-icon svg{width:17px;height:17px;}
+.kpi-trend{font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;display:flex;align-items:center;gap:3px;}
+.kpi-trend.up{color:var(--green);background:#E7F5EE;}
+.kpi-trend.down{color:var(--red);background:#FBEAE8;}
+.kpi-trend svg{width:10px;height:10px;}
+.kpi-value{font-family:var(--font-head);font-size:26px;font-weight:700;color:var(--navy);letter-spacing:-0.5px;}
+.kpi-label{font-size:11.5px;color:var(--ink-soft);margin-top:2px;font-weight:500;}
+.kpi-foot{font-size:10.5px;color:var(--ink-soft);margin-top:8px;padding-top:8px;border-top:1px solid var(--grey-line);}
+
+/* ===== PANEL ===== */
+.panel{
+  background:var(--white);border:1px solid var(--grey-line);border-radius:var(--radius-m);
+  margin-bottom:18px;overflow:hidden;
+}
+.panel-head{
+  padding:14px 18px;border-bottom:1px solid var(--grey-line);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.panel-title{font-family:var(--font-head);font-size:14.5px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;}
+.panel-title svg{width:16px;height:16px;color:var(--royal);}
+.panel-body{padding:16px 18px;}
+.panel-link{font-size:12px;color:var(--royal);font-weight:600;cursor:pointer;}
+.panel-link:hover{text-decoration:underline;}
+
+.two-col{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;align-items:start;}
+
+/* ===== FILTER CHIPS ===== */
+.chiprow{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.chip{
+  font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:20px;
+  border:1px solid var(--grey-line);color:var(--ink-soft);cursor:pointer;background:var(--white);
+}
+.chip:hover{border-color:var(--royal);color:var(--royal);}
+.chip.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* ===== ALERT LIST ===== */
+.alert-row{
+  display:flex;align-items:flex-start;gap:12px;padding:11px 0;
+  border-bottom:1px solid var(--grey-line);cursor:pointer;
+}
+.alert-row:last-child{border-bottom:none;}
+.sev-dot{width:9px;height:9px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.sev-critical{background:var(--red);}
+.sev-high{background:var(--amber);}
+.sev-medium{background:#E8C33D;}
+.sev-low{background:var(--green);}
+.alert-body{flex:1;min-width:0;}
+.alert-title{font-size:12.8px;font-weight:600;color:var(--ink);}
+.alert-meta{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.alert-time{font-size:10.5px;color:var(--ink-soft);white-space:nowrap;padding-top:1px;}
+.badge{
+  font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.2px;text-transform:uppercase;
+}
+.badge-critical{background:#FBEAE8;color:var(--red);}
+.badge-high{background:#FCF1E2;color:var(--amber);}
+.badge-medium{background:#FBF6DD;color:#8A7614;}
+.badge-low{background:#E7F5EE;color:var(--green);}
+
+/* ===== TABLE ===== */
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{
+  text-align:left;font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+  padding:8px 12px;border-bottom:2px solid var(--grey-line);background:#FAFBFC;
+}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--grey-line);color:var(--ink);vertical-align:middle;}
+tbody tr:hover{background:#F7F9FC;cursor:pointer;}
+.status-pill{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-block;}
+.st-scheduled{background:#E9EEF7;color:var(--royal);}
+.st-progress{background:#FCF1E2;color:var(--amber);}
+.st-completed{background:#E7F5EE;color:var(--green);}
+.st-flagged{background:#FBEAE8;color:var(--red);}
+.st-escalated{background:#F3E6F8;color:#8236A6;}
+.risk-num{font-weight:700;font-family:var(--font-head);}
+.risk-low{color:var(--green);}
+.risk-med{color:#B8960F;}
+.risk-high{color:var(--amber);}
+.risk-crit{color:var(--red);}
+
+/* ===== CCTV GRID ===== */
+.cam-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.cam-card{
+  background:var(--navy-deep);border-radius:var(--radius-m);overflow:hidden;cursor:pointer;
+  border:1px solid #16273F;position:relative;
+}
+.cam-feed{
+  aspect-ratio:16/10;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.cam-feed svg.scene{width:100%;height:100%;position:absolute;inset:0;}
+.cam-feed.offline{background:repeating-linear-gradient(135deg,#1b1b1b,#1b1b1b 8px,#232323 8px,#232323 16px);}
+.cam-scan{position:absolute;inset:0;background:linear-gradient(180deg, transparent 0%, rgba(91,155,224,0.06) 50%, transparent 100%);}
+.cam-topline{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;padding:7px 9px;font-family:var(--font-mono);font-size:9.5px;color:#DCE6F2;z-index:2;background:linear-gradient(180deg,rgba(0,0,0,.55),transparent);}
+.cam-live{display:flex;align-items:center;gap:4px;color:#FF5A5A;font-weight:700;}
+.cam-live-dot{width:5px;height:5px;background:#FF5A5A;border-radius:50%;animation:pulse 1.2s infinite;}
+.cam-botline{position:absolute;bottom:0;left:0;right:0;padding:8px 9px;background:linear-gradient(0deg,rgba(0,0,0,.65),transparent);z-index:2;}
+.cam-inst{color:#fff;font-size:11.5px;font-weight:600;}
+.cam-dist{color:#9FB3CC;font-size:10px;margin-top:1px;}
+.cam-detect{
+  position:absolute;border:1.5px solid #4ADE80;border-radius:3px;z-index:2;
+}
+.cam-detect::before{
+  content:attr(data-label);position:absolute;top:-16px;left:-1.5px;background:#4ADE80;color:#052e16;
+  font-size:8px;font-weight:700;padding:1px 4px;border-radius:2px;white-space:nowrap;font-family:var(--font-mono);
+}
+.cam-detect.warn{border-color:#FBBF24;}
+.cam-detect.warn::before{background:#FBBF24;color:#451a03;}
+.cam-foot{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:#0E2038;}
+.cam-id{font-family:var(--font-mono);font-size:10px;color:#8FA6C9;}
+.cam-risk{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
+
+/* ===== MAP ===== */
+.map-wrap{position:relative;border-radius:var(--radius-m);overflow:hidden;border:1px solid var(--grey-line);}
+.map-svg-bg{width:100%;display:block;background:#EAF0F7;}
+.map-marker{cursor:pointer;transition:transform .1s ease;}
+.map-marker:hover{transform:scale(1.15);}
+.map-legend{
+  position:absolute;bottom:14px;left:14px;background:rgba(255,255,255,.96);border:1px solid var(--grey-line);
+  border-radius:8px;padding:10px 13px;font-size:11px;box-shadow:var(--shadow);
+}
+.legend-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.legend-row:last-child{margin-bottom:0;}
+.legend-dot{width:9px;height:9px;border-radius:50%;}
+
+/* institution detail card */
+.inst-card{
+  position:absolute;top:14px;right:14px;width:250px;background:#fff;border:1px solid var(--grey-line);
+  border-radius:10px;box-shadow:0 8px 24px rgba(10,31,61,.16);padding:14px;display:none;
+}
+.inst-card.show{display:block;}
+.inst-card h4{font-family:var(--font-head);font-size:13.5px;color:var(--navy);margin-bottom:2px;}
+.inst-card .dist{font-size:11px;color:var(--ink-soft);margin-bottom:10px;}
+.inst-row{display:flex;justify-content:space-between;font-size:11.5px;padding:5px 0;border-bottom:1px dashed var(--grey-line);}
+.inst-row span:first-child{color:var(--ink-soft);}
+.inst-row span:last-child{font-weight:600;}
+.inst-close{position:absolute;top:9px;right:10px;cursor:pointer;color:var(--ink-soft);font-size:15px;}
+
+/* ===== MODAL ===== */
+.overlay{
+  position:fixed;inset:0;background:rgba(7,22,40,.55);z-index:100;display:none;
+  align-items:flex-start;justify-content:center;padding:5vh 16px;overflow-y:auto;backdrop-filter:blur(2px);
+}
+.overlay.show{display:flex;}
+.modal{
+  background:#fff;border-radius:12px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);
+  animation:modalin .18s ease;
+}
+@keyframes modalin{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--grey-line);display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-family:var(--font-head);font-size:15.5px;color:var(--navy);}
+.modal-close{cursor:pointer;color:var(--ink-soft);font-size:18px;line-height:1;}
+.modal-body{padding:18px 20px;max-height:60vh;overflow-y:auto;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--grey-line);display:flex;gap:8px;justify-content:flex-end;}
+.btn{
+  font-size:12.5px;font-weight:600;padding:8px 15px;border-radius:7px;cursor:pointer;border:1px solid var(--grey-line);
+  background:#fff;color:var(--ink);
+}
+.btn:hover{background:var(--grey-bg);}
+.btn-primary{background:var(--royal);border-color:var(--royal);color:#fff;}
+.btn-primary:hover{background:var(--royal-light);}
+
+/* ===== charts grid ===== */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.chart-box{height:230px;position:relative;}
+.reason-list{list-style:none;}
+.reason-list li{font-size:12px;padding:6px 0;padding-left:18px;position:relative;color:var(--ink);}
+.reason-list li::before{content:'●';position:absolute;left:0;color:var(--amber);font-size:8px;top:9px;}
+
+/* small util */
+.mt{margin-top:18px;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.muted{color:var(--ink-soft);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.district-heat{width:36px;height:14px;border-radius:3px;display:inline-block;}
+
+@media (max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .two-col{grid-template-columns:1fr;}
+  .cam-grid{grid-template-columns:repeat(2,1fr);}
+  .chart-grid{grid-template-columns:1fr;}
+}
+@media (max-width:720px){
+  #sidebar{position:fixed;left:-236px;transition:left .2s ease;}
+  #sidebar.open{left:0;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .cam-grid{grid-template-columns:1fr;}
+  .grid-3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 L21 6 V12 C21 17 17 21 12 22 C7 21 3 17 3 12 V6 Z" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="11.5" r="3.2" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="11.5" r="0.9" fill="#fff"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="name">SOUL NETRA</div>
+        <div class="tag">SEE · INSPECT · PROTECT · EMPOWER</div>
+      </div>
+    </div>
+    <div class="nav-scroll">
+      <div class="nav-section-label">Overview</div>
+      <div class="nav-item active" data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+      <div class="nav-item" data-view="monitoring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Live Monitoring<span class="nav-badge">38</span></div>
+      <div class="nav-item" data-view="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></svg>Risk Map</div>
+      <div class="nav-section-label">Operations</div>
+      <div class="nav-item" data-view="institutions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1M10 21v-4h4v4"/></svg>Institutions</div>
+      <div class="nav-item" data-view="inspections"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Inspections</div>
+      <div class="nav-item" data-view="random"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>Random Inspection</div>
+      <div class="nav-item" data-view="attendance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6"/></svg>Attendance</div>
+      <div class="nav-section-label">Intelligence</div>
+      <div class="nav-item" data-view="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4c0 1.5-.8 2.4-1.5 3.2-.6.7-1 1.2-1 2.3v1"/><path d="M9 8.2C8.3 7.4 7.5 6.5 7.5 5A4 4 0 0111.5 1"/><circle cx="12" cy="16" r="1"/><path d="M9 20h6"/></svg>AI Analytics</div>
+      <div class="nav-item" data-view="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>Alerts<span class="nav-badge">18</span></div>
+      <div class="nav-item" data-view="evidence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><circle cx="12" cy="11" r="3.2"/><path d="M8 4l1.5-2h5L16 4"/></svg>Evidence</div>
+      <div class="nav-section-label">Reports</div>
+      <div class="nav-item" data-view="officers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5S15.5 16.5 15.5 20"/><circle cx="18" cy="8" r="2.4"/><path d="M17 14.3c2.6.4 4.5 2.2 4.5 5.7"/></svg>Officers</div>
+      <div class="nav-item" data-view="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5a1 1 0 001 1h5M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg>Reports</div>
+      <div class="nav-item" data-view="audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Audit Logs</div>
+    </div>
+    <div class="sidebar-foot"><b>Dept. of Social Justice &amp; Empowerment</b><br>PMU Central Node · v2.4.1</div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <div class="crumb">SOUL NETRA / <b id="crumbView">Dashboard</b></div>
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input placeholder="Search institution, officer, district, inspection ID…">
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-pill"><span class="pulse-dot"></span>LIVE · SYSTEM NOMINAL</div>
+        <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot"></span></div>
+        <div class="avatar">RS</div>
+      </div>
+    </div>
+
+    <div id="content">
+
+      <!-- ============ DASHBOARD VIEW ============ -->
+      <div class="view active" id="view-dashboard">
+        <div class="page-head">
+          <div class="page-title">SOUL NETRA — Smart Real-Time Monitoring &amp; Inspection</div>
+          <div class="page-sub">Centralized Monitoring · AI-Powered Inspection · Geo-Tagged Evidence · Real-Time Alerts</div>
+        </div>
+
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <div class="two-col">
+          <div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/></svg>Institution Risk Map — Maharashtra Circle</div>
+                <span class="panel-link" onclick="switchView('map')">Open full map →</span>
+              </div>
+              <div class="panel-body" style="padding:0;">
+                <div id="miniMapHolder"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-6 3 3 5-7"/></svg>District-wise Snapshot</div>
+                <span class="panel-link" onclick="switchView('ai')">Full analytics →</span>
+              </div>
+              <div class="panel-body" style="padding:0;">
+                <table>
+                  <thead><tr><th>District</th><th>Institutions</th><th>Risk score</th><th>Attendance</th><th>CCTV uptime</th><th>Open alerts</th></tr></thead>
+                  <tbody id="districtTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg>Real-Time Alert Center</div>
+                <span class="panel-link" onclick="switchView('alerts')">View all →</span>
+              </div>
+              <div class="panel-body">
+                <div id="alertListMini"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4c0 1.5-.8 2.4-1.5 3.2-.6.7-1 1.2-1 2.3v1"/><circle cx="12" cy="16" r="1"/></svg>Highest Risk Institutions</div>
+              </div>
+              <div class="panel-body" id="topRiskList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ LIVE MONITORING VIEW ============ -->
+      <div class="view" id="view-monitoring">
+        <div class="page-head">
+          <div class="page-title">Live CCTV Monitoring</div>
+          <div class="page-sub">986 / 1,024 feeds online · AI object &amp; anomaly detection active on all live streams</div>
+        </div>
+        <div class="chiprow mt" style="margin-bottom:16px;" id="camFilters">
+          <span class="chip active" data-f="all">All</span>
+          <span class="chip" data-f="live">Live</span>
+          <span class="chip" data-f="offline">Offline</span>
+          <span class="chip" data-f="highrisk">High risk</span>
+          <span class="chip" data-f="tampered">Tampered</span>
+        </div>
+        <div class="cam-grid" id="camGrid"></div>
+      </div>
+
+      <!-- ============ RISK MAP VIEW ============ -->
+      <div class="view" id="view-map">
+        <div class="page-head">
+          <div class="page-title">Institution Risk Map</div>
+          <div class="page-sub">Geo-spatial risk distribution across monitored districts (PostGIS-indexed)</div>
+        </div>
+        <div class="chiprow" style="margin-bottom:14px;" id="mapFilters">
+          <span class="chip active" data-r="all">All risk levels</span>
+          <span class="chip" data-r="low">Low</span>
+          <span class="chip" data-r="medium">Medium</span>
+          <span class="chip" data-r="high">High</span>
+          <span class="chip" data-r="critical">Critical</span>
+        </div>
+        <div id="fullMapHolder"></div>
+      </div>
+
+      <!-- ============ INSTITUTIONS VIEW ============ -->
+      <div class="view" id="view-institutions">
+        <div class="page-head"><div class="page-title">Institutions</div><div class="page-sub">1,248 registered welfare institutions across 8 districts</div></div>
+        <div class="panel">
+          <div class="panel-body" style="padding:0;">
+            <table>
+              <thead><tr><th>Institution</th><th>District</th><th>Type</th><th>Beneficiaries</th><th>Risk</th><th>Attendance</th><th>CCTV</th><th>Last inspection</th></tr></thead>
+              <tbody id="institutionTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ INSPECTIONS VIEW ============ -->
+      <div class="view" id="view-inspections">
+        <div class="page-head"><div class="page-title">Inspection Management</div><div class="page-sub">156 active · 47 pending · 892 completed this quarter</div></div>
+        <div class="grid-3 mt" style="margin-bottom:18px;" id="inspStatusCards"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">All Inspections</div>
+            <div class="chiprow" id="inspFilters">
+              <span class="chip active" data-s="all">All</span>
+              <span class="chip" data-s="Scheduled">Scheduled</span>
+              <span class="chip" data-s="In Progress">In progress</span>
+              <span class="chip" data-s="Completed">Completed</span>
+              <span class="chip" data-s="Flagged">Flagged</span>
+              <span class="chip" data-s="Escalated">Escalated</span>
+            </div>
+          </div>
+          <div class="panel-body" style="padding:0;">
+            <table>
+              <thead><tr><th>ID</th><th>Institution</th><th>Officer</th><th>District</th><th>Date</th><th>Type</th><th>Status</th><th>Risk</th></tr></thead>
+              <tbody id="inspectionTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ RANDOM INSPECTION VIEW ============ -->
+      <div class="view" id="view-random">
+        <div class="page-head"><div class="page-title">Random Inspection Assignment</div><div class="page-sub">Tamper-proof randomized selection to prevent forewarned or staged inspections</div></div>
+        <div class="panel">
+          <div class="panel-body" style="text-align:center;padding:34px 20px;">
+            <button class="btn btn-primary" style="padding:12px 26px;font-size:13.5px;" onclick="generateRandomInspection()">⚄ Generate Random Inspection</button>
+            <div class="muted" style="font-size:11.5px;margin-top:10px;">Selection is weighted by risk score, days since last inspection, and officer proximity</div>
+          </div>
+          <div id="randomResult" style="display:none;padding:0 20px 24px;"></div>
+        </div>
+      </div>
+
+      <!-- ============ ATTENDANCE VIEW ============ -->
+      <div class="view" id="view-attendance">
+        <div class="page-head"><div class="page-title">Attendance &amp; Beneficiary Monitoring</div><div class="page-sub">Face + liveness verified attendance across all institutions</div></div>
+        <div class="grid-2">
+          <div class="panel"><div class="panel-head"><div class="panel-title">Weekly attendance trend</div></div><div class="panel-body"><div class="chart-box"><canvas id="chartAttendanceTrend"></canvas></div></div></div>
+          <div class="panel"><div class="panel-head"><div class="panel-title">Verification outcomes</div></div><div class="panel-body"><div class="chart-box"><canvas id="chartVerification"></canvas></div></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">⚠ Attendance Anomalies</div></div>
+          <div class="panel-body" style="padding:0;">
+            <table><thead><tr><th>Institution</th><th>District</th><th>Expected</th><th>Observed</th><th>Deviation</th><th>AI note</th></tr></thead>
+            <tbody id="attendanceAnomTable"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ AI ANALYTICS VIEW ============ -->
+      <div class="view" id="view-ai">
+        <div class="page-head"><div class="page-title">AI-Powered Anomaly Detection &amp; Analytics</div><div class="page-sub">Computer vision + risk scoring pipeline output across all monitored sites</div></div>
+        <div class="chart-grid mt" style="margin-bottom:18px;">
+          <div class="panel"><div class="panel-head"><div class="panel-title">Institution risk distribution</div></div><div class="panel-body"><div class="chart-box"><canvas id="chartRiskDist"></canvas></div></div></div>
+          <div class="panel"><div class="panel-head"><div class="panel-title">Alerts by category</div></div><div class="panel-body"><div class="chart-box"><canvas id="chartAlertCat"></canvas></div></div></div>
+          <div class="panel"><div class="panel-head"><div class="panel-title">District-wise risk comparison</div></div><div class="panel-body"><div class="chart-box"><canvas id="chartDistrictRisk"></canvas></div></div></div>
+          <div class="panel"><div class="panel-head"><div class="panel-title">CCTV uptime (30 days)</div></div><div class="panel-body"><div class="chart-box"><canvas id="chartUptime"></canvas></div></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Flagged Institutions — AI Explanation</div></div>
+          <div class="panel-body" id="aiExplainList"></div>
+        </div>
+      </div>
+
+      <!-- ============ ALERTS VIEW ============ -->
+      <div class="view" id="view-alerts">
+        <div class="page-head"><div class="page-title">Real-Time Alert Center</div><div class="page-sub">18 active alerts requiring attention</div></div>
+        <div class="chiprow" style="margin-bottom:14px;" id="alertFilters">
+          <span class="chip active" data-sev="all">All</span>
+          <span class="chip" data-sev="critical">🔴 Critical</span>
+          <span class="chip" data-sev="high">🟠 High</span>
+          <span class="chip" data-sev="medium">🟡 Medium</span>
+          <span class="chip" data-sev="low">🟢 Low</span>
+        </div>
+        <div class="panel"><div class="panel-body" id="alertListFull"></div></div>
+      </div>
+
+      <!-- ============ EVIDENCE VIEW ============ -->
+      <div class="view" id="view-evidence">
+        <div class="page-head"><div class="page-title">Geo-Tagged Evidence</div><div class="page-sub">Photo, video and document evidence captured during inspections</div></div>
+        <div class="grid-3" id="evidenceGrid"></div>
+      </div>
+
+      <!-- ============ OFFICERS VIEW ============ -->
+      <div class="view" id="view-officers">
+        <div class="page-head"><div class="page-title">Officer Performance</div><div class="page-sub">Ranked by compliance score, evidence quality and response time</div></div>
+        <div class="panel"><div class="panel-body" style="padding:0;">
+          <table><thead><tr><th>Rank</th><th>Officer</th><th>District</th><th>Completed</th><th>Pending</th><th>Avg time</th><th>Compliance</th></tr></thead>
+          <tbody id="officerTable"></tbody></table>
+        </div></div>
+      </div>
+
+      <!-- ============ REPORTS VIEW ============ -->
+      <div class="view" id="view-reports">
+        <div class="page-head"><div class="page-title">Reports</div><div class="page-sub">System workflow &amp; technology architecture</div></div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">System Workflow</div></div>
+          <div class="panel-body" id="workflowHolder"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Technology Architecture</div></div>
+          <div class="panel-body">
+            <div class="grid-3">
+              <div><b style="font-family:var(--font-head);color:var(--navy);font-size:12.5px;">Frontend</b><div class="muted" style="font-size:12px;margin-top:6px;line-height:1.9;">Android (Kotlin)<br>Web Dashboard (React)</div></div>
+              <div><b style="font-family:var(--font-head);color:var(--navy);font-size:12.5px;">Backend</b><div class="muted" style="font-size:12px;margin-top:6px;line-height:1.9;">REST APIs · API Gateway<br>Auth &amp; RBAC</div></div>
+              <div><b style="font-family:var(--font-head);color:var(--navy);font-size:12.5px;">Database</b><div class="muted" style="font-size:12px;margin-top:6px;line-height:1.9;">PostgreSQL · PostGIS</div></div>
+              <div><b style="font-family:var(--font-head);color:var(--navy);font-size:12.5px;">AI / CV</b><div class="muted" style="font-size:12px;margin-top:6px;line-height:1.9;">Python · PyTorch<br>OpenCV · YOLO</div></div>
+              <div><b style="font-family:var(--font-head);color:var(--navy);font-size:12.5px;">Communication</b><div class="muted" style="font-size:12px;margin-top:6px;line-height:1.9;">WebRTC · Firebase FCM</div></div>
+              <div><b style="font-family:var(--font-head);color:var(--navy);font-size:12.5px;">Storage</b><div class="muted" style="font-size:12px;margin-top:6px;line-height:1.9;">Object storage — images,<br>videos, documents</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ AUDIT VIEW ============ -->
+      <div class="view" id="view-audit">
+        <div class="page-head"><div class="page-title">Security &amp; Audit</div><div class="page-sub">All data is secured with encryption, role-based access control and audit logs</div></div>
+        <div class="grid-3" style="margin-bottom:18px;">
+          <div class="panel"><div class="panel-body"><div style="font-size:11px;color:var(--ink-soft);">Encryption status</div><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--green);margin-top:4px;">AES-256 · Active</div></div></div>
+          <div class="panel"><div class="panel-body"><div style="font-size:11px;color:var(--ink-soft);">Access model</div><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--navy);margin-top:4px;">RBAC · 5 roles</div></div></div>
+          <div class="panel"><div class="panel-body"><div style="font-size:11px;color:var(--ink-soft);">Logged events (24h)</div><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--navy);margin-top:4px;">4,812</div></div></div>
+        </div>
+        <div class="panel"><div class="panel-head"><div class="panel-title">Recent Activity Log</div></div>
+        <div class="panel-body" style="padding:0;">
+          <table><thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th><th>Resource</th></tr></thead>
+          <tbody id="auditTable"></tbody></table>
+        </div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle">Details</h3><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"><button class="btn" onclick="closeModal()">Close</button></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   MOCK DATA GENERATION
+   ============================================================ */
+const DISTRICTS = ["Pune","Nashik","Ahmednagar","Mumbai","Nagpur","Aurangabad","Kolhapur","Satara"];
+const INST_TYPES = ["Welfare Hostel","Old Age Home","SC/ST Ashram School","Skill Training Centre","Rehabilitation Centre","Day Care Institution"];
+const INST_NAME_PARTS = ["Dr. Ambedkar","Savitribai Phule","Shahaji Maharaj","Karmaveer","Jyotiba Phule","Rajarshi Shahu","Yashwantrao Chavan","Sant Gadge Baba","Annabhau Sathe","Chhatrapati Shivaji"];
+const OFFICER_FIRST = ["Rohit","Sneha","Amit","Priya","Vikram","Anjali","Suresh","Kavita","Nitin","Pooja","Ganesh","Meera","Sandeep","Rekha","Ajay"];
+const OFFICER_LAST = ["Deshmukh","Patil","Kulkarni","Shinde","Jadhav","More","Pawar","Kadam","Gaikwad","Bhosale"];
+
+function seededRandom(seed){let s=seed;return function(){s=(s*9301+49297)%233280;return s/233280;};}
+const rnd = seededRandom(42);
+function pick(arr){return arr[Math.floor(rnd()*arr.length)];}
+function rint(a,b){return Math.floor(rnd()*(b-a+1))+a;}
+
+function makeInstitutionName(i){
+  return pick(INST_NAME_PARTS)+" "+pick(INST_TYPES).split(" ")[0]+(rnd()>0.5?" "+pick(INST_TYPES):" "+pick(["Hostel","Centre","Ashram","Bhavan"]))+" — Unit "+(i%40+1);
+}
+
+const institutions = [];
+for(let i=0;i<48;i++){
+  const risk = rint(4,96);
+  institutions.push({
+    id:"INST-"+(1000+i),
+    name: pick(INST_NAME_PARTS)+" "+pick(["Welfare Hostel","Ashram School","Old Age Home","Skill Centre","Rehabilitation Home","Day Care Centre"]),
+    district: pick(DISTRICTS),
+    type: pick(INST_TYPES),
+    beneficiaries: rint(40,320),
+    risk: risk,
+    attendance: Math.max(38, 100-Math.round(risk*0.7)-rint(0,10)),
+    cctv: rnd()>0.12,
+    lastInspection: rint(1,60)+" days ago",
+    lat: 30+rnd()*300, lon: 40+rnd()*520
+  });
+}
+function riskLevel(r){ return r>=80?"critical": r>=60?"high": r>=35?"medium":"low"; }
+function riskColor(level){ return {critical:"#C4392B",high:"#D98B1E",medium:"#E8C33D",low:"#178A5A"}[level]; }
+
+const officers = [];
+for(let i=0;i<15;i++){
+  officers.push({
+    name: OFFICER_FIRST[i]+" "+pick(OFFICER_LAST),
+    district: pick(DISTRICTS),
+    completed: rint(18,64),
+    pending: rint(0,9),
+    avgTime: (1.2+rnd()*2.3).toFixed(1)+" hrs",
+    compliance: rint(71,98)
+  });
+}
+officers.sort((a,b)=>b.compliance-a.compliance);
+
+const INSPECTION_TYPES = ["Routine","Random","Complaint-based","Follow-up","Surprise"];
+const INSP_STATUS = ["Scheduled","In Progress","Completed","Flagged","Escalated"];
+const inspections = [];
+for(let i=0;i<60;i++){
+  const inst = pick(institutions);
+  inspections.push({
+    id:"INSP-"+(20260+i),
+    institution: inst.name,
+    officer: pick(officers).name,
+    district: inst.district,
+    date: "2026-08-"+String(rint(1,31)).padStart(2,'0'),
+    type: pick(INSPECTION_TYPES),
+    status: pick(INSP_STATUS),
+    risk: inst.risk
+  });
+}
+
+const ALERT_TYPES = [
+  {t:"Camera offline",sev:"high",icon:"📷"},
+  {t:"Low footfall detected",sev:"medium",icon:"👥"},
+  {t:"After-hours activity detected",sev:"critical",icon:"🌙"},
+  {t:"Face verification failed",sev:"medium",icon:"🧑"},
+  {t:"Possible proxy attendance",sev:"high",icon:"👤"},
+  {t:"Inspection evidence missing",sev:"medium",icon:"📋"},
+  {t:"Geo-fence violation",sev:"critical",icon:"📍"},
+  {t:"High-risk institution detected",sev:"critical",icon:"🚨"},
+  {t:"Camera tampering suspected",sev:"high",icon:"⚠"},
+  {t:"Attendance anomaly",sev:"low",icon:"📊"}
+];
+const alerts = [];
+for(let i=0;i<26;i++){
+  const a = pick(ALERT_TYPES);
+  const inst = pick(institutions);
+  alerts.push({
+    id:"ALT-"+(4400+i),
+    type:a.t, icon:a.icon, sev:a.sev,
+    institution: inst.name, district: inst.district,
+    time: rint(2,340)+" min ago",
+    confidence: rint(78,99),
+    status: pick(["Open","Acknowledged","Assigned","Resolved"]),
+    officer: pick(officers).name
+  });
+}
+alerts.sort((a,b)=>{const order={critical:0,high:1,medium:2,low:3};return order[a.sev]-order[b.sev];});
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const viewLabels = {dashboard:"Dashboard",monitoring:"Live Monitoring",map:"Risk Map",institutions:"Institutions",inspections:"Inspections",random:"Random Inspection",attendance:"Attendance",ai:"AI Analytics",alerts:"Alerts",evidence:"Evidence",officers:"Officers",reports:"Reports",audit:"Audit Logs"};
+function switchView(name){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===name));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el = document.getElementById('view-'+name);
+  if(el) el.classList.add('active');
+  document.getElementById('crumbView').textContent = viewLabels[name]||name;
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.nav-item[data-view]').forEach(n=>{
+  n.addEventListener('click', ()=>switchView(n.dataset.view));
+});
+
+/* ============================================================
+   MODAL HELPER
+   ============================================================ */
+function openModal(title, bodyHtml, footHtml){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalFoot').innerHTML = footHtml || '<button class="btn" onclick="closeModal()">Close</button>';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
+
+/* ============================================================
+   KPI CARDS
+   ============================================================ */
+const kpis = [
+  {label:"Total Institutions", value:"1,248", trend:"+2.1%", up:true, icon:'<path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1M10 21v-4h4v4"/>', color:"var(--royal)", bg:"#EAF1FB", foot:"Across 8 districts"},
+  {label:"Active Inspections", value:"156", trend:"+8", up:true, icon:'<path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>', color:"var(--green)", bg:"#E7F5EE", foot:"47 pending assignment"},
+  {label:"High-Risk Institutions", value:"32", trend:"+5", up:false, icon:'<path d="M12 9v4M12 17h.01M10.3 3.9L2.7 17a2 2 0 001.7 3h15.2a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>', color:"var(--red)", bg:"#FBEAE8", foot:"AI risk score ≥ 60"},
+  {label:"Live CCTV Feeds", value:"986 / 1,024", trend:"96.3%", up:true, icon:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>', color:"var(--royal)", bg:"#EAF1FB", foot:"38 offline / tampered"},
+  {label:"Pending Inspections", value:"47", trend:"-6", up:true, icon:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>', color:"var(--amber)", bg:"#FCF1E2", foot:"Avg wait 2.4 days"},
+  {label:"Active Alerts", value:"18", trend:"+3", up:false, icon:'<path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/>', color:"var(--red)", bg:"#FBEAE8", foot:"4 critical severity"},
+  {label:"Attendance Compliance", value:"91.6%", trend:"+0.8%", up:true, icon:'<circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6"/>', color:"var(--green)", bg:"#E7F5EE", foot:"Face + liveness verified"},
+  {label:"Verified Beneficiaries", value:"24,680", trend:"+412", up:true, icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>', color:"var(--royal)", bg:"#EAF1FB", foot:"98.1% verification rate"}
+];
+document.getElementById('kpiGrid').innerHTML = kpis.map((k,i)=>`
+  <div class="kpi-card" onclick="showKpiDetail(${i})">
+    <div class="kpi-top">
+      <div class="kpi-icon" style="background:${k.bg};color:${k.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${k.icon}</svg></div>
+      <div class="kpi-trend ${k.up?'up':'down'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">${k.up?'<path d="M5 15l7-7 7 7"/>':'<path d="M5 9l7 7 7-7"/>'}</svg>${k.trend}</div>
+    </div>
+    <div class="kpi-value">${k.value}</div>
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-foot">${k.foot}</div>
+  </div>`).join('');
+function showKpiDetail(i){
+  const k = kpis[i];
+  openModal(k.label, `
+    <div style="font-family:var(--font-head);font-size:32px;font-weight:700;color:var(--navy);">${k.value}</div>
+    <div class="muted" style="margin-top:4px;">${k.foot}</div>
+    <div class="chart-box mt" style="height:180px;"><canvas id="modalKpiChart"></canvas></div>
+  `);
+  setTimeout(()=>{
+    const ctx = document.getElementById('modalKpiChart');
+    if(!ctx) return;
+    new Chart(ctx, {type:'line', data:{labels:['W1','W2','W3','W4','W5','W6'], datasets:[{data:Array.from({length:6},()=>rint(60,100)), borderColor:k.color, backgroundColor:k.color+'22', fill:true, tension:.35, pointRadius:0}]}, options:baseChartOpts(false)});
+  },30);
+}
+
+/* ============================================================
+   MINI + FULL MAP (SVG-based stylized district map)
+   ============================================================ */
+function buildMap(targetId, height){
+  const w=760,h=height;
+  let markers = institutions.map(inst=>{
+    const level = riskLevel(inst.risk);
+    const x = 40 + (inst.lon/560)*(w-80);
+    const y = 30 + (inst.lat/330)*(h-60);
+    return `<circle class="map-marker" cx="${x}" cy="${y}" r="6" fill="${riskColor(level)}" stroke="#fff" stroke-width="1.6"
+      data-id="${inst.id}" data-level="${level}" onclick="showInstitutionCard('${inst.id}')" opacity="0.92"/>`;
+  }).join('');
+  return `
+  <div class="map-wrap" style="position:relative;">
+    <svg class="map-svg-bg" viewBox="0 0 ${w} ${h}" style="height:${h}px;">
+      <defs>
+        <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#DCE5F0" stroke-width="1"/></pattern>
+        <linearGradient id="landgrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#F6F9FC"/><stop offset="100%" stop-color="#E7EEF6"/>
+        </linearGradient>
+      </defs>
+      <rect width="${w}" height="${h}" fill="url(#landgrad)"/>
+      <rect width="${w}" height="${h}" fill="url(#grid)"/>
+      <path d="M30,${h*0.15} Q ${w*0.3},${h*0.02} ${w*0.55},${h*0.1} T ${w*0.9},${h*0.2} L ${w*0.94},${h*0.75} Q ${w*0.7},${h*0.98} ${w*0.4},${h*0.9} T 25,${h*0.7} Z"
+        fill="#E3ECF5" stroke="#C7D6E8" stroke-width="1.5"/>
+      ${markers}
+    </svg>
+    <div class="map-legend">
+      <div class="legend-row"><span class="legend-dot" style="background:#178A5A;"></span>Low risk</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#E8C33D;"></span>Medium risk</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#D98B1E;"></span>High risk</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#C4392B;"></span>Critical</div>
+    </div>
+    <div class="inst-card" id="instCard_${targetId}"></div>
+  </div>`;
+}
+document.getElementById('miniMapHolder').innerHTML = buildMap('mini', 230);
+document.getElementById('fullMapHolder').innerHTML = buildMap('full', 480);
+
+function showInstitutionCard(id){
+  const inst = institutions.find(x=>x.id===id);
+  const level = riskLevel(inst.risk);
+  ['mini','full'].forEach(t=>{
+    const card = document.getElementById('instCard_'+t);
+    if(!card) return;
+    card.innerHTML = `
+      <span class="inst-close" onclick="this.parentElement.classList.remove('show')">✕</span>
+      <h4>${inst.name}</h4>
+      <div class="dist">${inst.district} District</div>
+      <div class="inst-row"><span>Risk score</span><span style="color:${riskColor(level)};">${inst.risk}/100 (${level.toUpperCase()})</span></div>
+      <div class="inst-row"><span>Last inspection</span><span>${inst.lastInspection}</span></div>
+      <div class="inst-row"><span>Attendance</span><span>${inst.attendance}%</span></div>
+      <div class="inst-row"><span>CCTV status</span><span>${inst.cctv?'Online':'Offline'}</span></div>
+      <div class="inst-row"><span>Beneficiaries</span><span>${inst.beneficiaries}</span></div>
+      <div class="inst-row" style="border-bottom:none;"><span>Institution ID</span><span>${inst.id}</span></div>
+    `;
+    card.classList.add('show');
+  });
+}
+
+/* ============================================================
+   DISTRICT TABLE (dashboard)
+   ============================================================ */
+const districtStats = DISTRICTS.map(d=>{
+  const list = institutions.filter(i=>i.district===d);
+  const avgRisk = list.length? Math.round(list.reduce((a,b)=>a+b.risk,0)/list.length): rint(20,60);
+  const avgAtt = list.length? Math.round(list.reduce((a,b)=>a+b.attendance,0)/list.length): rint(70,95);
+  return {district:d, count:list.length||rint(80,220), risk:avgRisk, attendance:avgAtt, uptime:rint(88,99), alerts:rint(0,6)};
+});
+document.getElementById('districtTable').innerHTML = districtStats.map(d=>`
+  <tr onclick="switchView('map')">
+    <td><b>${d.district}</b></td>
+    <td>${d.count}</td>
+    <td><span class="district-heat" style="background:${riskColor(riskLevel(d.risk))};"></span> <span class="risk-num risk-${riskLevel(d.risk)==='critical'?'crit':riskLevel(d.risk)}">${d.risk}</span></td>
+    <td>${d.attendance}%</td>
+    <td>${d.uptime}%</td>
+    <td>${d.alerts}</td>
+  </tr>`).join('');
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+function alertRowHtml(a){
+  return `<div class="alert-row" onclick='showAlertDetail(${JSON.stringify(a).replace(/'/g,"&apos;")})'>
+    <span class="sev-dot sev-${a.sev}"></span>
+    <div class="alert-body">
+      <div class="alert-title">${a.icon} ${a.type}</div>
+      <div class="alert-meta">${a.institution} · ${a.district} · AI confidence ${a.confidence}%</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="badge badge-${a.sev}">${a.sev}</div>
+      <div class="alert-time">${a.time}</div>
+    </div>
+  </div>`;
+}
+document.getElementById('alertListMini').innerHTML = alerts.slice(0,6).map(alertRowHtml).join('');
+function renderFullAlerts(filter){
+  const list = filter==='all'? alerts : alerts.filter(a=>a.sev===filter);
+  document.getElementById('alertListFull').innerHTML = list.map(alertRowHtml).join('') || '<div class="muted" style="padding:20px;text-align:center;">No alerts in this category.</div>';
+}
+renderFullAlerts('all');
+document.querySelectorAll('#alertFilters .chip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('#alertFilters .chip').forEach(x=>x.classList.remove('active')); c.classList.add('active');
+  renderFullAlerts(c.dataset.sev);
+}));
+function showAlertDetail(a){
+  openModal(a.type, `
+    <div class="inst-row"><span>Alert ID</span><span>${a.id}</span></div>
+    <div class="inst-row"><span>Institution</span><span>${a.institution}</span></div>
+    <div class="inst-row"><span>District</span><span>${a.district}</span></div>
+    <div class="inst-row"><span>Severity</span><span class="badge badge-${a.sev}">${a.sev}</span></div>
+    <div class="inst-row"><span>AI confidence</span><span>${a.confidence}%</span></div>
+    <div class="inst-row"><span>Status</span><span>${a.status}</span></div>
+    <div class="inst-row"><span>Assigned officer</span><span>${a.officer}</span></div>
+    <div class="inst-row" style="border-bottom:none;"><span>Reported</span><span>${a.time}</span></div>
+  `, `<button class="btn" onclick="closeModal()">Acknowledge</button><button class="btn" onclick="closeModal()">Assign</button><button class="btn btn-primary" onclick="closeModal()">Escalate</button>`);
+}
+
+/* ============================================================
+   TOP RISK INSTITUTIONS (dashboard)
+   ============================================================ */
+const topRisk = [...institutions].sort((a,b)=>b.risk-a.risk).slice(0,5);
+document.getElementById('topRiskList').innerHTML = topRisk.map(inst=>{
+  const level = riskLevel(inst.risk);
+  return `<div class="alert-row" onclick="showAiExplain('${inst.id}')">
+    <span class="sev-dot sev-${level==='critical'?'critical':level==='high'?'high':level==='medium'?'medium':'low'}"></span>
+    <div class="alert-body">
+      <div class="alert-title">${inst.name}</div>
+      <div class="alert-meta">${inst.district} · ${inst.beneficiaries} beneficiaries</div>
+    </div>
+    <div class="risk-num risk-${level==='critical'?'crit':level}">${inst.risk}</div>
+  </div>`;
+}).join('');
+
+/* ============================================================
+   CCTV GRID
+   ============================================================ */
+function camSceneSvg(offline, tampered){
+  if(offline) return '';
+  const skyTop = "#0F2A47", skyBot="#193B60";
+  return `<svg class="scene" viewBox="0 0 300 190" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="sky${Math.random()}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${skyTop}"/><stop offset="100%" stop-color="${skyBot}"/></linearGradient></defs>
+    <rect width="300" height="190" fill="${skyTop}"/>
+    <rect y="120" width="300" height="70" fill="#0C2038"/>
+    <rect x="20" y="60" width="46" height="60" fill="#16314F"/>
+    <rect x="80" y="40" width="60" height="80" fill="#12283F"/>
+    <rect x="160" y="70" width="50" height="50" fill="#183456"/>
+    <rect x="230" y="50" width="55" height="70" fill="#12283F"/>
+    ${Array.from({length:5}).map(()=>`<circle cx="${20+Math.random()*260}" cy="${60+Math.random()*50}" r="1.4" fill="#3B5C82" opacity="${0.4+Math.random()*0.5}"/>`).join('')}
+    <ellipse cx="150" cy="180" rx="140" ry="14" fill="#081525"/>
+  </svg>`;
+}
+function camDetections(risk){
+  if(risk<40) return '';
+  const boxes = [];
+  const n = risk>75?3:risk>55?2:1;
+  for(let i=0;i<n;i++){
+    const x=10+rint(0,55), y=15+rint(0,45), w=14+rint(0,10), h=22+rint(0,14);
+    const warn = rnd()>0.55;
+    const labels = warn? ["UNUSUAL ACTIVITY","AFTER-HOURS","CROWD"] : ["PERSON"];
+    boxes.push(`<div class="cam-detect ${warn?'warn':''}" data-label="${pick(labels)}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%;"></div>`);
+  }
+  return boxes.join('');
+}
+function buildCamCards(){
+  return institutions.slice(0,24).map((inst,idx)=>{
+    const offline = !inst.cctv;
+    const tampered = !offline && rnd()>0.9;
+    const level = riskLevel(inst.risk);
+    const camId = "CAM-"+String(2000+idx);
+    return `<div class="cam-card" data-status="${offline?'offline':'live'}" data-risk="${level}" data-tampered="${tampered}" onclick="showCamDetail('${camId}','${inst.id.replace(/'/g,"")}')">
+      <div class="cam-feed ${offline?'offline':''}">
+        ${camSceneSvg(offline)}
+        ${!offline?'<div class="cam-scan"></div>':''}
+        ${!offline? camDetections(inst.risk):''}
+        <div class="cam-topline">
+          ${offline? '<span style="color:#FF5A5A;font-weight:700;">● OFFLINE</span>' : '<span class="cam-live"><span class="cam-live-dot"></span>LIVE</span>'}
+          <span>${offline?'--':'24'} FPS</span>
+        </div>
+        ${offline?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:10.5px;font-family:var(--font-mono);z-index:2;">NO SIGNAL${tampered?' · TAMPER SUSPECTED':''}</div>`:''}
+        <div class="cam-botline">
+          <div class="cam-inst">${inst.name}</div>
+          <div class="cam-dist">${inst.district} District</div>
+        </div>
+      </div>
+      <div class="cam-foot">
+        <span class="cam-id">${camId}</span>
+        <span class="cam-risk" style="background:${riskColor(level)}22;color:${riskColor(level)};">${level.toUpperCase()}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('camGrid').innerHTML = buildCamCards();
+document.querySelectorAll('#camFilters .chip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('#camFilters .chip').forEach(x=>x.classList.remove('active')); c.classList.add('active');
+  const f = c.dataset.f;
+  document.querySelectorAll('#camGrid .cam-card').forEach(card=>{
+    let show = true;
+    if(f==='live') show = card.dataset.status==='live';
+    else if(f==='offline') show = card.dataset.status==='offline';
+    else if(f==='highrisk') show = card.dataset.risk==='high'||card.dataset.risk==='critical';
+    else if(f==='tampered') show = card.dataset.tampered==='true';
+    card.style.display = show?'block':'none';
+  });
+}));
+function showCamDetail(camId, instId){
+  const inst = institutions.find(i=>i.id===instId);
+  const level = riskLevel(inst.risk);
+  openModal(camId+" — "+inst.name, `
+    <div style="border-radius:8px;overflow:hidden;">${camSceneSvg(!inst.cctv)}</div>
+    <div class="inst-row" style="margin-top:10px;"><span>District</span><span>${inst.district}</span></div>
+    <div class="inst-row"><span>Status</span><span>${inst.cctv?'Live':'Offline'}</span></div>
+    <div class="inst-row"><span>Risk level</span><span style="color:${riskColor(level)};">${level.toUpperCase()}</span></div>
+    <div class="inst-row" style="border-bottom:none;"><span>AI detections (24h)</span><span>${rint(3,40)} events</span></div>
+  `, `<button class="btn" onclick="closeModal()">Flag camera</button><button class="btn btn-primary" onclick="closeModal()">Open full panel</button>`);
+}
+
+/* ============================================================
+   INSTITUTIONS TABLE
+   ============================================================ */
+document.getElementById('institutionTable').innerHTML = institutions.map(inst=>{
+  const level = riskLevel(inst.risk);
+  return `<tr onclick="showInstitutionModal('${inst.id}')">
+    <td><b>${inst.name}</b><div class="muted" style="font-size:10.5px;">${inst.id}</div></td>
+    <td>${inst.district}</td>
+    <td>${inst.type}</td>
+    <td>${inst.beneficiaries}</td>
+    <td class="risk-num risk-${level==='critical'?'crit':level}">${inst.risk}</td>
+    <td>${inst.attendance}%</td>
+    <td>${inst.cctv?'🟢 Online':'🔴 Offline'}</td>
+    <td>${inst.lastInspection}</td>
+  </tr>`;
+}).join('');
+function showInstitutionModal(id){
+  const inst = institutions.find(i=>i.id===id);
+  const level = riskLevel(inst.risk);
+  openModal(inst.name, `
+    <div class="inst-row"><span>Institution ID</span><span>${inst.id}</span></div>
+    <div class="inst-row"><span>District</span><span>${inst.district}</span></div>
+    <div class="inst-row"><span>Type</span><span>${inst.type}</span></div>
+    <div class="inst-row"><span>Beneficiaries</span><span>${inst.beneficiaries}</span></div>
+    <div class="inst-row"><span>Risk score</span><span style="color:${riskColor(level)};">${inst.risk}/100 (${level.toUpperCase()})</span></div>
+    <div class="inst-row"><span>Attendance</span><span>${inst.attendance}%</span></div>
+    <div class="inst-row"><span>CCTV status</span><span>${inst.cctv?'Online':'Offline'}</span></div>
+    <div class="inst-row" style="border-bottom:none;"><span>Last inspection</span><span>${inst.lastInspection}</span></div>
+  `, `<button class="btn" onclick="closeModal()">Schedule inspection</button><button class="btn btn-primary" onclick="closeModal(); showAiExplain('${inst.id}')">View AI explanation</button>`);
+}
+
+/* ============================================================
+   INSPECTIONS
+   ============================================================ */
+const inspStatusCounts = {Scheduled:0,'In Progress':0,Completed:0,Flagged:0,Escalated:0};
+inspections.forEach(i=>inspStatusCounts[i.status]++);
+document.getElementById('inspStatusCards').innerHTML = Object.entries(inspStatusCounts).map(([k,v])=>`
+  <div class="panel" style="margin-bottom:0;"><div class="panel-body">
+    <div class="muted" style="font-size:11px;">${k}</div>
+    <div style="font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--navy);margin-top:3px;">${v}</div>
+  </div></div>`).join('');
+function statusClass(s){return {Scheduled:'st-scheduled','In Progress':'st-progress',Completed:'st-completed',Flagged:'st-flagged',Escalated:'st-escalated'}[s];}
+function renderInspections(filter){
+  const list = filter==='all'? inspections : inspections.filter(i=>i.status===filter);
+  document.getElementById('inspectionTable').innerHTML = list.map(i=>{
+    const level = riskLevel(i.risk);
+    return `<tr onclick="showInspectionModal('${i.id}')">
+      <td class="muted">${i.id}</td>
+      <td><b>${i.institution}</b></td>
+      <td>${i.officer}</td>
+      <td>${i.district}</td>
+      <td>${i.date}</td>
+      <td>${i.type}</td>
+      <td><span class="status-pill ${statusClass(i.status)}">${i.status}</span></td>
+      <td class="risk-num risk-${level==='critical'?'crit':level}">${i.risk}</td>
+    </tr>`;
+  }).join('');
+}
+renderInspections('all');
+document.querySelectorAll('#inspFilters .chip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('#inspFilters .chip').forEach(x=>x.classList.remove('active')); c.classList.add('active');
+  renderInspections(c.dataset.s);
+}));
+function showInspectionModal(id){
+  const i = inspections.find(x=>x.id===id);
+  openModal(i.id, `
+    <div class="inst-row"><span>Institution</span><span>${i.institution}</span></div>
+    <div class="inst-row"><span>Officer</span><span>${i.officer}</span></div>
+    <div class="inst-row"><span>District</span><span>${i.district}</span></div>
+    <div class="inst-row"><span>Date</span><span>${i.date}</span></div>
+    <div class="inst-row"><span>Type</span><span>${i.type}</span></div>
+    <div class="inst-row"><span>Status</span><span class="status-pill ${statusClass(i.status)}">${i.status}</span></div>
+    <div class="inst-row" style="border-bottom:none;"><span>Risk score</span><span>${i.risk}/100</span></div>
+  `, `<button class="btn" onclick="closeModal()">Reassign officer</button><button class="btn" onclick="closeModal()">View evidence</button><button class="btn btn-primary" onclick="closeModal()">Approve report</button>`);
+}
+
+/* ============================================================
+   RANDOM INSPECTION GENERATOR
+   ============================================================ */
+function generateRandomInspection(){
+  const inst = institutions[Math.floor(Math.random()*institutions.length)];
+  const officer = officers[Math.floor(Math.random()*officers.length)];
+  const id = "INSP-RND-"+Math.floor(2000+Math.random()*8999);
+  const dist = (Math.random()*18+1).toFixed(1);
+  const now = new Date();
+  const deadline = new Date(now.getTime()+48*3600*1000);
+  document.getElementById('randomResult').style.display='block';
+  document.getElementById('randomResult').innerHTML = `
+    <div style="border:1px solid var(--grey-line);border-radius:10px;padding:16px;background:#FAFBFC;">
+      <div class="topbar-pill" style="display:inline-flex;margin-bottom:12px;"><span class="pulse-dot"></span>RANDOMIZATION COMPLETE</div>
+      <div class="inst-row"><span>Inspection ID</span><span><b>${id}</b></span></div>
+      <div class="inst-row"><span>Institution</span><span>${inst.name}</span></div>
+      <div class="inst-row"><span>District</span><span>${inst.district}</span></div>
+      <div class="inst-row"><span>Assigned officer</span><span>${officer.name}</span></div>
+      <div class="inst-row"><span>Officer distance</span><span>${dist} km</span></div>
+      <div class="inst-row"><span>GPS coordinates captured</span><span>${(18+Math.random()).toFixed(4)}° N, ${(73+Math.random()*2).toFixed(4)}° E</span></div>
+      <div class="inst-row"><span>Timestamp</span><span>${now.toLocaleString()}</span></div>
+      <div class="inst-row" style="border-bottom:none;"><span>Deadline</span><span>${deadline.toLocaleString()}</span></div>
+    </div>`;
+}
+
+/* ============================================================
+   ATTENDANCE
+   ============================================================ */
+function baseChartOpts(legend){
+  return {responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:!!legend,labels:{boxWidth:10,font:{size:11}}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10.5}}},y:{grid:{color:'#EEF2F7'},ticks:{font:{size:10.5}}}}};
+}
+new Chart(document.getElementById('chartAttendanceTrend'), {
+  type:'line',
+  data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    datasets:[
+      {label:'Present %',data:[91,89,93,88,90,84,79],borderColor:'#1B4F9C',backgroundColor:'#1B4F9C22',fill:true,tension:.35,pointRadius:2},
+      {label:'Expected %',data:[95,95,95,95,95,90,85],borderColor:'#D98B1E',borderDash:[5,4],fill:false,tension:.2,pointRadius:0}
+    ]},
+  options:baseChartOpts(true)
+});
+new Chart(document.getElementById('chartVerification'), {
+  type:'doughnut',
+  data:{labels:['Verified','Face match failed','Liveness failed','Not attempted'],
+    datasets:[{data:[24680,540,310,890],backgroundColor:['#178A5A','#D98B1E','#C4392B','#C7D0DC']}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}}}
+});
+
+const attAnomalies = [...institutions].sort((a,b)=>a.attendance-b.attendance).slice(0,6);
+document.getElementById('attendanceAnomTable').innerHTML = attAnomalies.map(inst=>{
+  const expected = Math.min(98, inst.attendance+rint(18,32));
+  const dev = expected-inst.attendance;
+  return `<tr onclick="switchView('institutions')">
+    <td><b>${inst.name}</b></td><td>${inst.district}</td>
+    <td>${expected}%</td><td>${inst.attendance}%</td>
+    <td class="risk-num risk-high">-${dev}%</td>
+    <td class="muted">Attendance significantly lower than expected</td>
+  </tr>`;
+}).join('');
+
+/* ============================================================
+   AI ANALYTICS CHARTS
+   ============================================================ */
+const riskBuckets = {low:0,medium:0,high:0,critical:0};
+institutions.forEach(i=>riskBuckets[riskLevel(i.risk)]++);
+new Chart(document.getElementById('chartRiskDist'), {
+  type:'bar',
+  data:{labels:['Low','Medium','High','Critical'],
+    datasets:[{data:[riskBuckets.low,riskBuckets.medium,riskBuckets.high,riskBuckets.critical],
+      backgroundColor:['#178A5A','#E8C33D','#D98B1E','#C4392B'],borderRadius:5,barThickness:36}]},
+  options:{...baseChartOpts(false),plugins:{legend:{display:false}}}
+});
+const alertCatCounts = {};
+ALERT_TYPES.forEach(t=>alertCatCounts[t.t]=0);
+alerts.forEach(a=>alertCatCounts[a.type]=(alertCatCounts[a.type]||0)+1);
+new Chart(document.getElementById('chartAlertCat'), {
+  type:'bar',
+  data:{labels:Object.keys(alertCatCounts).map(k=>k.length>16?k.slice(0,15)+'…':k),
+    datasets:[{data:Object.values(alertCatCounts),backgroundColor:'#1B4F9C',borderRadius:4}]},
+  options:{...baseChartOpts(false),indexAxis:'y',plugins:{legend:{display:false}}}
+});
+new Chart(document.getElementById('chartDistrictRisk'), {
+  type:'radar',
+  data:{labels:districtStats.map(d=>d.district),
+    datasets:[{label:'Avg risk score',data:districtStats.map(d=>d.risk),borderColor:'#C4392B',backgroundColor:'#C4392B22',pointRadius:2}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{ticks:{display:false},grid:{color:'#EEF2F7'},pointLabels:{font:{size:9.5}}}}}
+});
+new Chart(document.getElementById('chartUptime'), {
+  type:'line',
+  data:{labels:Array.from({length:14},(_,i)=>'D'+(i+1)),
+    datasets:[{data:Array.from({length:14},()=>rint(90,99)),borderColor:'#178A5A',backgroundColor:'#178A5A18',fill:true,tension:.3,pointRadius:0}]},
+  options:baseChartOpts(false)
+});
+
+function aiReasonsFor(inst){
+  const pool = [
+    `Attendance dropped by ${rint(10,30)}% versus historical baseline`,
+    `CCTV offline for ${rint(1,6)} hours during operational window`,
+    `Unusual activity detected after ${rint(9,12)} PM`,
+    `Reported beneficiary count inconsistent with observed footfall`,
+    `Face verification failure rate above threshold (${rint(8,22)}%)`,
+    `Geo-fence exit recorded outside inspection hours`,
+    `Inspection evidence timestamp mismatch detected`
+  ];
+  const n = inst.risk>75?4:3;
+  return pool.sort(()=>0.5-rnd()).slice(0,n);
+}
+function buildAiExplainRow(inst){
+  const level = riskLevel(inst.risk);
+  return `<div class="alert-row" style="align-items:center;" onclick="showAiExplain('${inst.id}')">
+    <span class="sev-dot sev-${level==='critical'?'critical':level==='high'?'high':'medium'}"></span>
+    <div class="alert-body">
+      <div class="alert-title">${inst.name}</div>
+      <div class="alert-meta">${inst.district} · Risk score <b style="color:${riskColor(level)};">${inst.risk}/100</b></div>
+    </div>
+    <span class="panel-link">View AI explanation →</span>
+  </div>`;
+}
+document.getElementById('aiExplainList').innerHTML = topRisk.map(buildAiExplainRow).join('');
+function showAiExplain(id){
+  const inst = institutions.find(i=>i.id===id);
+  const level = riskLevel(inst.risk);
+  const reasons = aiReasonsFor(inst);
+  openModal("AI Risk Explanation — "+inst.name, `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+      <div style="font-family:var(--font-head);font-size:34px;font-weight:700;color:${riskColor(level)};">${inst.risk}</div>
+      <div><div style="font-weight:700;color:${riskColor(level)};font-size:13px;">${level.toUpperCase()} RISK</div><div class="muted" style="font-size:11.5px;">${inst.district} · ${inst.id}</div></div>
+    </div>
+    <div class="muted" style="font-size:11.5px;font-weight:600;margin-bottom:6px;">CONTRIBUTING FACTORS</div>
+    <ul class="reason-list">${reasons.map(r=>`<li>${r}</li>`).join('')}</ul>
+  `, `<button class="btn" onclick="closeModal()">Dismiss</button><button class="btn btn-primary" onclick="closeModal()">Schedule inspection</button>`);
+}
+
+/* ============================================================
+   EVIDENCE GRID
+   ============================================================ */
+function evidenceThumb(seed){
+  return `<svg viewBox="0 0 200 130" style="width:100%;display:block;">
+    <rect width="200" height="130" fill="#EFF3F8"/>
+    <rect width="200" height="130" fill="url(#grid)"/>
+    <rect x="0" y="90" width="200" height="40" fill="#DCE5F0"/>
+    <rect x="${20+seed%40}" y="${40+seed%20}" width="34" height="50" rx="3" fill="#B9C8DC"/>
+    <rect x="${90+seed%30}" y="${55+seed%15}" width="26" height="35" rx="3" fill="#A7BBD4"/>
+    <circle cx="${150+seed%20}" cy="60" r="14" fill="#C4D2E3"/>
+  </svg>`;
+}
+const evidenceItems = Array.from({length:9}).map((_,i)=>{
+  const inst = pick(institutions);
+  return {inst, type:pick(["Photo","Video","Document"]), officer: pick(officers).name,
+    lat:(18+Math.random()).toFixed(4), lon:(73+Math.random()*2).toFixed(4), verified: Math.random()>0.2};
+});
+document.getElementById('evidenceGrid').innerHTML = evidenceItems.map((e,i)=>`
+  <div class="panel" style="margin-bottom:0;cursor:pointer;" onclick="showEvidenceModal(${i})">
+    <div style="border-bottom:1px solid var(--grey-line);">${evidenceThumb(i*17+3)}</div>
+    <div class="panel-body">
+      <div style="font-weight:600;font-size:12.5px;">${e.type} — ${e.inst.name}</div>
+      <div class="muted" style="font-size:10.8px;margin-top:3px;">${e.lat}°N, ${e.lon}°E · ${e.officer}</div>
+      <div style="margin-top:8px;">${e.verified?'<span class="badge badge-low">Verified</span>':'<span class="badge badge-medium">Pending</span>'}</div>
+    </div>
+  </div>`).join('');
+function showEvidenceModal(i){
+  const e = evidenceItems[i];
+  openModal(e.type+" — "+e.inst.name, `
+    <div style="border-radius:8px;overflow:hidden;margin-bottom:12px;">${evidenceThumb(i*17+3)}</div>
+    <div class="inst-row"><span>GPS location</span><span>${e.lat}°N, ${e.lon}°E</span></div>
+    <div class="inst-row"><span>Officer</span><span>${e.officer}</span></div>
+    <div class="inst-row"><span>Institution</span><span>${e.inst.name}</span></div>
+    <div class="inst-row" style="border-bottom:none;"><span>Verification</span><span>${e.verified?'Verified':'Pending review'}</span></div>
+  `, `<button class="btn" onclick="closeModal()">View on map</button><button class="btn btn-primary" onclick="closeModal()">Verify evidence</button>`);
+}
+
+/* ============================================================
+   OFFICERS
+   ============================================================ */
+document.getElementById('officerTable').innerHTML = officers.map((o,i)=>`
+  <tr>
+    <td><b>#${i+1}</b></td>
+    <td>${o.name}</td>
+    <td>${o.district}</td>
+    <td>${o.completed}</td>
+    <td>${o.pending}</td>
+    <td>${o.avgTime}</td>
+    <td><span class="risk-num ${o.compliance>90?'risk-low':o.compliance>80?'risk-med':'risk-high'}">${o.compliance}%</span></td>
+  </tr>`).join('');
+
+/* ============================================================
+   WORKFLOW
+   ============================================================ */
+const workflowSteps = ["Data Sources","Data Capture","API Gateway","Authentication & RBAC","Data Storage","AI / Computer Vision","Risk Scoring","Anomaly Detection","Real-Time Alerts","Officer Action","Inspection","Report","Escalation","Resolution"];
+document.getElementById('workflowHolder').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${workflowSteps.map((s,i)=>`
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div style="background:${i%3===0?'var(--navy)':i%3===1?'var(--royal)':'var(--green)'};color:#fff;padding:9px 14px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap;">${s}</div>
+    ${i<workflowSteps.length-1?'<span style="color:var(--ink-soft);">→</span>':''}
+  </div>`).join('')}</div>`;
+
+/* ============================================================
+   AUDIT LOG
+   ============================================================ */
+const AUDIT_ACTIONS = ["Viewed institution profile","Approved inspection report","Assigned officer","Escalated alert","Downloaded evidence","Modified inspection status","Logged in","Exported analytics report","Updated geo-fence boundary"];
+const auditRows = Array.from({length:12}).map(()=>({
+  time: rint(1,59)+" min ago", user: pick(officers).name, role: pick(["Inspection Officer","PMU Official","District Officer","Administrator"]),
+  action: pick(AUDIT_ACTIONS), resource: pick(institutions).name
+}));
+document.getElementById('auditTable').innerHTML = auditRows.map(r=>`
+  <tr><td class="muted">${r.time}</td><td>${r.user}</td><td>${r.role}</td><td>${r.action}</td><td>${r.resource}</td></tr>`).join('');
+
+</script>
+</body>
+</html>
